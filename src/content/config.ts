@@ -1,10 +1,11 @@
 import { defineCollection, z } from 'astro:content';
 
 const videoCollection = defineCollection({
-  type: 'content', // 表明这是基于 Markdown 的内容
+  type: 'content',
   schema: z.object({
     title: z.string(),
-    pubDate: z.date(), // 用于后续判断是否超前发布（倒计时锁定功能）
+    // 使用 z.coerce.date() 强制将字符串转换为日期对象，防止报错
+    pubDate: z.coerce.date(), 
     cover: z.string(),
     category: z.string(),
     rating: z.number().min(0).max(10).optional(),
@@ -13,11 +14,11 @@ const videoCollection = defineCollection({
       likes: z.string().optional()
     }).optional(),
     platforms: z.object({
-      bilibili: z.string().optional(), // 仅填 BV 号
-      youtube: z.string().optional(), // 仅填视频 ID
-      douyin: z.string().optional(), // 填完整链接
-      xiaohongshu: z.string().optional(), // 填完整链接
-      local: z.string().optional() // 本地视频路径，仅在无其他平台时兜底使用
+      bilibili: z.string().optional(),
+      youtube: z.string().optional(),
+      douyin: z.string().optional(),
+      xiaohongshu: z.string().optional(),
+      local: z.string().optional()
     }).optional(),
     location: z.string().optional(),
     isRecommend: z.boolean().default(false),
@@ -30,5 +31,5 @@ const videoCollection = defineCollection({
 });
 
 export const collections = {
-  'videos': videoCollection, // 注册 videos 集合
+  'videos': videoCollection,
 };
