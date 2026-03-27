@@ -13,19 +13,18 @@ export async function getStaticPaths() {
 const { video } = Astro.props;
 const data = video.data;
 
-// 判断是否是未来视频
+// 判断是否是未来视频（以上海时间为准）
 const now = new Date();
 const publishDate = new Date(data.date);
 const isFuture = publishDate > now;
 
-// 数字格式化（K / M）
+// 数字格式化 K/M
 function formatNumber(num: number): string {
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
   return num.toLocaleString();
 }
 
-// 作者（默认 AxelEwan，支持联合创作）
 const author = data.author || 'AxelEwan';
 ---
 
@@ -38,31 +37,20 @@ const author = data.author || 'AxelEwan';
           <div class="relative w-full h-full">
             <img src={data.cover} class="w-full h-full object-cover filter blur-xl" alt={data.title} />
             <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-              <!-- Phosphor lock-bold -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mb-6 text-white" fill="none" viewBox="0 0 256 256">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 176a48 48 0 1 0 0-96 48 48 0 0 0 0 96Z"/>
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 224c-40-32-80-64-80-112a80 80 0 1 1 160 0c0 48-40 80-80 112Z"/>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mb-6 text-white" fill="none" viewBox="0 0 256 256" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M128 176a48 48 0 1 0 0-96 48 48 0 0 0 0 96Z"/>
+                <path d="M128 224c-40-32-80-64-80-112a80 80 0 1 1 160 0c0 48-40 80-80 112Z"/>
               </svg>
               <div class="text-3xl font-bold mb-2">即将发布</div>
-              <div id="countdown" class="text-4xl font-mono tabular-nums"></div>
+              <div id="countdown" class="text-4xl font-mono tabular-nums" data-publish-date={publishDate.getTime()}></div>
             </div>
           </div>
         ) : (
           <div class="w-full h-full">
             {data.platforms?.bilibili ? (
-              <iframe 
-                src={`https://player.bilibili.com/player.html?bvid=${data.platforms.bilibili}&autoplay=0&muted=0`} 
-                class="w-full h-full" 
-                frameborder="0" 
-                allowfullscreen
-              ></iframe>
+              <iframe src={`https://player.bilibili.com/player.html?bvid=${data.platforms.bilibili}&autoplay=0&muted=0`} class="w-full h-full" frameborder="0" allowfullscreen></iframe>
             ) : data.platforms?.youtube ? (
-              <iframe 
-                src={`https://www.youtube.com/embed/${data.platforms.youtube}`} 
-                class="w-full h-full" 
-                frameborder="0" 
-                allowfullscreen
-              ></iframe>
+              <iframe src={`https://www.youtube.com/embed/${data.platforms.youtube}`} class="w-full h-full" frameborder="0" allowfullscreen></iframe>
             ) : (
               <img src={data.cover} class="w-full h-full object-cover" alt={data.title} />
             )}
@@ -75,51 +63,24 @@ const author = data.author || 'AxelEwan';
         <div class="lg:col-span-8">
           <h1 class="text-5xl font-bold tracking-tighter mb-4">{data.title}</h1>
           
-          <!-- 标题下方：作者名称（带 user-bold 图标） -->
+          <!-- 标题下方：作者名称 -->
           <div class="flex items-center gap-2 text-zinc-400 mb-8">
-            <!-- Phosphor user-bold -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 256 256">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 136a48 48 0 1 0 0-96 48 48 0 0 0 0 96Z"/>
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M200 216a72 72 0 0 0-144 0"/>
-            </svg>
             <span class="text-white font-medium">{author}</span>
           </div>
 
-          <!-- 三列区域：第一列改为发布日期，其余为播放量和点赞 -->
+          <!-- 三列：发布日期 | 播放量 | 点赞（无图标） -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 border-t border-b border-zinc-800 py-8">
-            <!-- 第一列：发布日期（calendar-bold） -->
-            <div class="flex items-center gap-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 256 256">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M208 48H48a16 16 0 0 0-16 16v144a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16Z"/>
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M176 24v24M80 24v24M40 88h176"/>
-              </svg>
-              <div>
-                <div class="text-4xl font-bold text-white">{new Date(data.date).toLocaleDateString('zh-CN')}</div>
-                <div class="text-sm text-zinc-400">发布日期</div>
-              </div>
+            <div>
+              <div class="text-4xl font-bold text-white">{new Date(data.date).toLocaleDateString('zh-CN')}</div>
+              <div class="text-sm text-zinc-400">发布日期</div>
             </div>
-
-            <!-- 播放量 -->
-            <div class="flex items-center gap-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 256 256">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 56c-48 0-80 48-80 72s32 72 80 72 80-48 80-72-32-72-80-72Z"/>
-                <circle cx="128" cy="128" r="24" stroke="currentColor" stroke-width="24"/>
-              </svg>
-              <div>
-                <div class="text-4xl font-bold text-white">{formatNumber(data.views)}</div>
-                <div class="text-sm text-zinc-400">播放量</div>
-              </div>
+            <div>
+              <div class="text-4xl font-bold text-white">{formatNumber(data.views)}</div>
+              <div class="text-sm text-zinc-400">播放量</div>
             </div>
-
-            <!-- 点赞 -->
-            <div class="flex items-center gap-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 256 256">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 216l-12-11C68 164 32 124 32 80a48 48 0 0 1 96-12 48 48 0 0 1 96 12c0 44-36 84-84 125Z"/>
-              </svg>
-              <div>
-                <div class="text-4xl font-bold text-white">{formatNumber(data.likes)}</div>
-                <div class="text-sm text-zinc-400">点赞</div>
-              </div>
+            <div>
+              <div class="text-4xl font-bold text-white">{formatNumber(data.likes)}</div>
+              <div class="text-sm text-zinc-400">点赞</div>
             </div>
           </div>
 
@@ -129,37 +90,20 @@ const author = data.author || 'AxelEwan';
           <div class="flex flex-wrap gap-3 mb-10">
             {data.tags.map((tag: string) => (
               <span class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-zinc-900 text-sm rounded-3xl">
-                <!-- tag-bold -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 256 256">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M200 48H56a8 8 0 0 0-8 8v152a8 8 0 0 0 8 8h144a8 8 0 0 0 8-8V56a8 8 0 0 0-8-8Z"/>
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M96 88a8 8 0 1 1-8-8 8 8 0 0 1 8 8Z"/>
-                </svg>
                 {tag}
               </span>
             ))}
             {data.location && (
               <span class="inline-flex items-center gap-1.5 px-4 py-1.5 text-zinc-400 text-sm">
-                <!-- map-pin-bold -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 256 256">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 176a48 48 0 1 0 0-96 48 48 0 0 0 0 96Z"/>
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 224c-40-32-80-64-80-112a80 80 0 1 1 160 0c0 48-40 80-80 112Z"/>
-                </svg>
-                {data.location}
+                📍 {data.location}
               </span>
             )}
           </div>
 
-          <!-- 评论区 -->
+          <!-- 评论区（保持不变） -->
           {data.enableComments && data.comments?.length > 0 && (
             <div>
-              <h3 class="flex items-center gap-2 text-2xl font-semibold mb-6">
-                <!-- chat-bold -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 256 256">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 216H56a16 16 0 0 1-16-16V88a16 16 0 0 1 16-16h144a16 16 0 0 1 16 16v64a16 16 0 0 1-16 16h-16Z"/>
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 216l-32-32H56a16 16 0 0 1-16-16V88a16 16 0 0 1 16-16h144a16 16 0 0 1 16 16v64a16 16 0 0 1-16 16h-16Z"/>
-                </svg>
-                观众评论
-              </h3>
+              <h3 class="flex items-center gap-2 text-2xl font-semibold mb-6">观众评论</h3>
               <div class="space-y-8">
                 {data.comments.map((comment: any, i: number) => (
                   <div class={`flex gap-4 ${i === data.comments.length - 1 ? 'opacity-30 blur-sm' : ''}`}>
@@ -172,9 +116,7 @@ const author = data.author || 'AxelEwan';
                 ))}
               </div>
               <div class="mt-10 text-center">
-                <a href={`https://www.bilibili.com/video/${data.platforms?.bilibili || ''}`} 
-                   target="_blank" 
-                   class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors">
+                <a href={`https://www.bilibili.com/video/${data.platforms?.bilibili || ''}`} target="_blank" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors">
                   查看更多评论 →
                 </a>
               </div>
@@ -182,18 +124,15 @@ const author = data.author || 'AxelEwan';
           )}
         </div>
 
-        <!-- 右侧平台 -->
+        <!-- 右侧平台 Logo -->
         <div class="lg:col-span-4">
           <div class="sticky top-8">
             <h4 class="text-lg text-zinc-400 mb-6">在其他平台观看</h4>
             <div class="flex flex-col gap-4">
               {data.platforms?.bilibili && (
-                <a href={`https://www.bilibili.com/video/${data.platforms.bilibili}`} target="_blank" 
-                   class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
-                  <!-- 临时用 play-bold，可换成 bilibili SVG -->
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 256 256">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 56c-48 0-80 48-80 72s32 72 80 72 80-48 80-72-32-72-80-72Z"/>
-                  </svg>
+                <a href={`https://www.bilibili.com/video/${data.platforms.bilibili}`} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
+                  <!-- Bilibili (fa6-brands style) -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#FB7299]" fill="currentColor" viewBox="0 0 24 24"><path d="M18.223 3.5H5.777C4.8 3.5 4 4.3 4 5.277v13.446C4 19.7 4.8 20.5 5.777 20.5h12.446c.977 0 1.777-.8 1.777-1.777V5.277C20 4.3 19.2 3.5 18.223 3.5zM8 17.25H6.5V7.75H8v9.5zm5.5 0h-1.5V7.75h1.5v9.5zm4-9.5h-1.5v9.5H17.5V7.75z"/></svg>
                   <div>
                     <div class="font-medium">Bilibili</div>
                     <div class="text-xs text-zinc-400">大陆首选</div>
@@ -201,15 +140,39 @@ const author = data.author || 'AxelEwan';
                 </a>
               )}
               {data.platforms?.youtube && (
-                <a href={`https://www.youtube.com/watch?v=${data.platforms.youtube}`} target="_blank" 
-                   class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
-                  <!-- Phosphor youtube-logo-bold 风格临时替代 -->
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 256 256">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="M128 56c-48 0-80 48-80 72s32 72 80 72 80-48 80-72-32-72-80-72Z"/>
-                  </svg>
+                <a href={`https://www.youtube.com/watch?v=${data.platforms.youtube}`} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
+                  <!-- YouTube logo-bold -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2c-.3-1.1-1.2-2-2.3-2.3C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.2.4c-1.1.3-2 1.2-2.3 2.3C.1 8.1 0 12 0 12s.1 3.9.4 5.8c.3 1.1 1.2 2 2.3 2.3 1.9.4 9.2.4 9.2.4s7.3 0 9.2-.4c1.1-.3 2-1.2 2.3-2.3.4-1.9.5-5.8.5-5.8s-.1-3.9-.4-5.8zM9.75 15.5V8.5l6 3.5-6 3.5z"/></svg>
                   <div>
                     <div class="font-medium">YouTube</div>
                     <div class="text-xs text-zinc-400">国际版</div>
+                  </div>
+                </a>
+              )}
+              {data.platforms?.douyin && (
+                <a href={data.platforms.douyin} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
+                  <!-- TikTok / 抖音 logo -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525 2.5v7.3c1.8-.8 3.8-1.2 5.9-1.2v4.8c-2.1 0-4.1.4-5.9 1.2v7.3H6.525v-15h6z"/></svg>
+                  <div>
+                    <div class="font-medium">抖音</div>
+                  </div>
+                </a>
+              )}
+              {data.platforms?.xiaohongshu && (
+                <a href={data.platforms.xiaohongshu} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
+                  <!-- 小红书 -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#FF2442]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                  <div>
+                    <div class="font-medium">小红书</div>
+                  </div>
+                </a>
+              )}
+              {data.platforms?.local && (
+                <a href={data.platforms.local} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all">
+                  <!-- 本地/其他 copyright-bold -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 256 256" stroke="currentColor" stroke-width="24"><circle cx="128" cy="128" r="96"/><path d="M128 80a48 48 0 1 0 0 96 48 48 0 0 0 0-96Z"/></svg>
+                  <div>
+                    <div class="font-medium">本地视频</div>
                   </div>
                 </a>
               )}
@@ -220,19 +183,23 @@ const author = data.author || 'AxelEwan';
     </div>
   </main>
 
-  <!-- 未来视频倒计时脚本（不变） -->
-  {isFuture && (
-    <script define:vars={{ publishDate: publishDate.getTime() }}>
-      const countdownEl = document.getElementById('countdown');
-      const end = new Date({publishDate}).getTime();
+  <!-- 修复后的倒计时脚本 -->
+  <script>
+    const countdownEl = document.getElementById('countdown');
+    if (countdownEl) {
+      const endTime = parseInt(countdownEl.dataset.publishDate);
       const timer = setInterval(() => {
-        const diff = end - Date.now();
-        if (diff < 0) { clearInterval(timer); window.location.reload(); return; }
-        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-        countdownEl.textContent = `${h} : ${m} : ${s}`;
+        const diff = endTime - Date.now();
+        if (diff < 0) {
+          clearInterval(timer);
+          window.location.reload();
+          return;
+        }
+        const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        countdownEl.textContent = `${hours} : ${minutes} : ${seconds}`;
       }, 1000);
-    </script>
-  )}
+    }
+  </script>
 </Layout>
