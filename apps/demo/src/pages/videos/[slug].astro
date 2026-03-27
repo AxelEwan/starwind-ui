@@ -27,7 +27,7 @@ const author = data.author || 'AxelEwan';
 ---
 
 <Layout title={`${data.title} | AxelEwan`}>
-  <!-- SEO Meta -->
+  <!-- SEO -->
   <meta name="description" content={data.intro} />
   <meta property="og:title" content={data.title} />
   <meta property="og:description" content={data.intro} />
@@ -37,71 +37,78 @@ const author = data.author || 'AxelEwan';
   <meta property="twitter:title" content={data.title} />
   <meta property="twitter:description" content={data.intro} />
   <meta property="twitter:image" content={data.cover} />
-  <link rel="canonical" href={`https://yourdomain.com/videos/${video.id.replace('.md', '')}`} />
 
   <main class="min-h-screen bg-black text-white pb-20 dark:bg-zinc-950">
     <div class="max-w-7xl mx-auto px-6 pt-8">
-      <!-- 视频容器（干净版，无辉光） -->
-      <div id="video-container" class="aspect-video bg-zinc-950 rounded-2xl overflow-hidden relative shadow-2xl cursor-pointer group"
-           data-is-future={isFuture ? 'true' : 'false'}
-           data-publish-time={publishDate.getTime()}>
-        
-        <!-- 未来视频状态 -->
-        <div id="future-overlay" class={isFuture ? 'block' : 'hidden'}>
-          <img src={data.cover} class="w-full h-full object-cover filter blur-xl" alt={data.title} />
-          <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mb-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 11V7a5 5 0 00-10 0v4m10 0H7a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2z" />
-            </svg>
-            <div class="text-3xl font-bold mb-3">即将发布</div>
-            <div id="countdown" class="text-4xl font-mono tabular-nums text-white" data-publish-date={publishDate.getTime()}></div>
-          </div>
-        </div>
-
-        <!-- 未播放状态（丝滑悬浮放大） -->
-        <div id="ready-state" class={isFuture ? 'hidden' : 'block'}>
-          <img id="cover-image" 
-               src={data.cover} 
-               class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105 will-change-transform" 
-               alt={data.title} />
-          <div class="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/25 transition-colors">
-            <div id="play-button" class="w-20 h-20 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all active:scale-95 shadow-2xl">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5.14v14l11-7z"/>
+      <!-- 视频容器 + 间距修复 -->
+      <div class="mb-16">
+        <div id="video-container" class="aspect-video bg-zinc-950 rounded-2xl overflow-hidden relative shadow-2xl cursor-pointer group"
+             data-is-future={isFuture ? 'true' : 'false'}
+             data-publish-time={publishDate.getTime()}>
+          
+          <!-- 未来视频状态 -->
+          <div id="future-overlay" class={isFuture ? 'block' : 'hidden'}>
+            <img src={data.cover} class="w-full h-full object-cover filter blur-xl" alt={data.title} />
+            <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mb-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 11V7a5 5 0 00-10 0v4m10 0H7a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2z" />
               </svg>
+              <div class="text-3xl font-bold mb-3">即将发布</div>
+              <div id="countdown" class="text-4xl font-mono tabular-nums text-white" data-publish-date={publishDate.getTime()}></div>
             </div>
           </div>
-        </div>
 
-        <!-- 真实播放器（默认不自动播放） -->
-        <div id="player" class="hidden w-full h-full">
-          {data.platforms?.bilibili ? (
-            <iframe 
-              src={`https://player.bilibili.com/player.html?bvid=${data.platforms.bilibili}&autoplay=0&muted=0`} 
-              class="w-full h-full" 
-              frameborder="0" 
-              allowfullscreen
-            ></iframe>
-          ) : data.platforms?.youtube ? (
-            <iframe 
-              src={`https://www.youtube.com/embed/${data.platforms.youtube}?autoplay=0`} 
-              class="w-full h-full" 
-              frameborder="0" 
-              allowfullscreen
-            ></iframe>
-          ) : data.platforms?.douyin ? (
-            <a href={data.platforms.douyin} target="_blank" class="block w-full h-full">
-              <img src={data.cover} class="w-full h-full object-cover" alt="抖音视频" />
-            </a>
-          ) : data.platforms?.xiaohongshu ? (
-            <a href={data.platforms.xiaohongshu} target="_blank" class="block w-full h-full">
-              <img src={data.cover} class="w-full h-full object-cover" alt="小红书视频" />
-            </a>
-          ) : data.platforms?.local ? (
-            <video controls class="w-full h-full" src={data.platforms.local}></video>
-          ) : (
-            <img src={data.cover} class="w-full h-full object-cover" alt={data.title} />
-          )}
+          <!-- 未播放状态（丝滑放大） -->
+          <div id="ready-state" class={isFuture ? 'hidden' : 'block'}>
+            <img id="cover-image" 
+                 src={data.cover} 
+                 class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105 will-change-transform" 
+                 alt={data.title} />
+            <div class="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/25 transition-colors">
+              <div id="play-button" class="w-20 h-20 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all active:scale-95 shadow-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5.14v14l11-7z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 真实播放器（默认不自动播放） -->
+          <div id="player" class="hidden w-full h-full">
+            {data.platforms?.bilibili ? (
+              <iframe 
+                src={`https://player.bilibili.com/player.html?bvid=${data.platforms.bilibili}&autoplay=0&muted=0`} 
+                class="w-full h-full" 
+                frameborder="0" 
+                allowfullscreen
+              ></iframe>
+            ) : data.platforms?.youtube ? (
+              <iframe 
+                src={`https://www.youtube.com/embed/${data.platforms.youtube}?autoplay=0`} 
+                class="w-full h-full" 
+                frameborder="0" 
+                allowfullscreen
+              ></iframe>
+            ) : data.platforms?.douyin || data.platforms?.tiktok ? (
+              <a href={data.platforms.douyin || data.platforms.tiktok} target="_blank" class="block w-full h-full bg-zinc-900 flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="text-6xl mb-3">📱</div>
+                  <div class="text-lg">在抖音观看</div>
+                </div>
+              </a>
+            ) : data.platforms?.xiaohongshu ? (
+              <a href={data.platforms.xiaohongshu} target="_blank" class="block w-full h-full bg-zinc-900 flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="text-6xl mb-3">🌸</div>
+                  <div class="text-lg">在小红书观看</div>
+                </div>
+              </a>
+            ) : data.platforms?.local ? (
+              <video controls class="w-full h-full" src={data.platforms.local}></video>
+            ) : (
+              <img src={data.cover} class="w-full h-full object-cover" alt={data.title} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -114,7 +121,7 @@ const author = data.author || 'AxelEwan';
             <span class="text-white font-medium">{author}</span>
           </div>
 
-          <!-- 三列数据（强制同行） -->
+          <!-- 三列数据 -->
           <div class="grid grid-cols-3 gap-6 mb-12 border-t border-b border-zinc-800 py-8">
             <div class="text-center">
               <div class="text-2xl sm:text-3xl font-bold text-white">{new Date(data.date).toLocaleDateString('zh-CN')}</div>
@@ -170,14 +177,15 @@ const author = data.author || 'AxelEwan';
           )}
         </div>
 
-        <!-- 右侧平台（支持全部5个平台） -->
+        <!-- 右侧平台（使用指定 yesicon SVG，白色） -->
         <div class="lg:col-span-4">
           <div class="sticky top-8">
             <h4 class="text-lg text-zinc-400 mb-6">在其他平台观看</h4>
             <div class="flex flex-col gap-4">
               {data.platforms?.bilibili && (
                 <a href={`https://www.bilibili.com/video/${data.platforms.bilibili}`} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M18.223 3.5H5.777C4.8 3.5 4 4.3 4 5.277v13.446C4 19.7 4.8 20.5 5.777 20.5h12.446c.977 0 1.777-.8 1.777-1.777V5.277C20 4.3 19.2 3.5 18.223 3.5zM8 17.25H6.5V7.75H8v9.5zm5.5 0h-1.5V7.75h1.5v9.5zm4-9.5h-1.5v9.5H17.5V7.75z"/></svg>
+                  <!-- Bilibili (fa6-brands) -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.223 3.5H5.777C4.8 3.5 4 4.3 4 5.277v13.446C4 19.7 4.8 20.5 5.777 20.5h12.446c.977 0 1.777-.8 1.777-1.777V5.277C20 4.3 19.2 3.5 18.223 3.5zM8 17.25H6.5V7.75H8v9.5zm5.5 0h-1.5V7.75h1.5v9.5zm4-9.5h-1.5v9.5H17.5V7.75z"/></svg>
                   <div>
                     <div class="font-medium">Bilibili</div>
                     <div class="text-xs text-zinc-400">大陆首选</div>
@@ -186,16 +194,17 @@ const author = data.author || 'AxelEwan';
               )}
               {data.platforms?.youtube && (
                 <a href={`https://www.youtube.com/watch?v=${data.platforms.youtube}`} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2c-.3-1.1-1.2-2-2.3-2.3C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.2.4c-1.1.3-2 1.2-2.3 2.3C.1 8.1 0 12 0 12s.1 3.9.4 5.8c.3 1.1 1.2 2 2.3 2.3 1.9.4 9.2.4 9.2.4s7.3 0 9.2-.4c1.1-.3 2-1.2 2.3-2.3.4-1.9.5-5.8.5-5.8zM9.75 15.5V8.5l6 3.5-6 3.5z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2c-.3-1.1-1.2-2-2.3-2.3C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.2.4c-1.1.3-2 1.2-2.3 2.3C.1 8.1 0 12 0 12s.1 3.9.4 5.8c.3 1.1 1.2 2 2.3 2.3 1.9.4 9.2.4 9.2.4s7.3 0 9.2-.4c1.1-.3 2-1.2 2.3-2.3.4-1.9.5-5.8.5-5.8zM9.75 15.5V8.5l6 3.5-6 3.5z"/></svg>
                   <div>
                     <div class="font-medium">YouTube</div>
                     <div class="text-xs text-zinc-400">国际版</div>
                   </div>
                 </a>
               )}
-              {data.platforms?.douyin && (
-                <a href={data.platforms.douyin} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
-                  <span class="text-3xl">📱</span>
+              {(data.platforms?.douyin || data.platforms?.tiktok) && (
+                <a href={data.platforms.douyin || data.platforms.tiktok} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
+                  <!-- TikTok logo bold -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525 2.5v7.3c1.8-.8 3.8-1.2 5.9-1.2v4.8c-2.1 0-4.1.4-5.9 1.2v7.3H6.525v-15h6z"/></svg>
                   <div>
                     <div class="font-medium">抖音</div>
                   </div>
@@ -203,7 +212,8 @@ const author = data.author || 'AxelEwan';
               )}
               {data.platforms?.xiaohongshu && (
                 <a href={data.platforms.xiaohongshu} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
-                  <span class="text-3xl">🌸</span>
+                  <!-- Xiaohongshu -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
                   <div>
                     <div class="font-medium">小红书</div>
                   </div>
@@ -211,7 +221,11 @@ const author = data.author || 'AxelEwan';
               )}
               {data.platforms?.local && (
                 <a href={data.platforms.local} target="_blank" class="flex items-center gap-4 p-5 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-all text-white">
-                  <span class="text-3xl">🎥</span>
+                  <!-- Copyright bold -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 256 256" stroke="currentColor" stroke-width="24">
+                    <circle cx="128" cy="128" r="96"/>
+                    <path d="M128 80a48 48 0 1 0 0 96 48 48 0 0 0 0-96Z"/>
+                  </svg>
                   <div>
                     <div class="font-medium">本地视频</div>
                   </div>
