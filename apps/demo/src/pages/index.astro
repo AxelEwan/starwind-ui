@@ -1,109 +1,147 @@
 ---
 import { getCollection } from 'astro:content';
-const videos = await getCollection('videos');
-import CarouselDemos from "@/components/carousel-demos/CarouselDemos.astro";
-import CarouselPluginDemo from "@/components/carousel-demos/CarouselPluginDemo.astro";
-import {
-  AccordionDemo,
-  AlertDemo,
-  AlertDialogDemo,
-  AspectRatioDemo,
-  AvatarDemo,
-  BadgeDemo,
-  BreadcrumbDemo,
-  ButtonDemo,
-  ButtonGroupDemo,
-  CardDemo,
-  CheckboxDemo,
-  CollapsibleDemo,
-  DialogDemo,
-  DropdownDemo,
-  DropzoneDemo,
-  FormDemo,
-  ImageDemo,
-  InputGroupDemo,
-  InputOtpDemo,
-  ItemDemo,
-  KbdDemo,
-  NativeSelectDemo,
-  PaginationDemo,
-  PopoverDemo,
-  ProgressDemo,
-  RadioGroupDemo,
-  SelectDemo,
-  SeparatorDemo,
-  SheetDemo,
-  SkeletonDemo,
-  SliderDemo,
-  SpinnerDemo,
-  SwitchDemo,
-  TableDemo,
-  TabsDemo,
-  ThemeToggleDemo,
-  ToastDemo,
-  ToggleDemo,
-  TooltipDemo,
-  VideoDemo,
-} from "@/components/demos";
-import Layout from "@/layouts/Layout.astro";
+import Layout from '@/layouts/Layout.astro';
+
+// 获取视频（推荐的优先显示）
+const allVideos = await getCollection('videos');
+const recommendedVideos = allVideos
+  .filter(v => v.data.recommend)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// 获取手动写的文章（最新动态第一部分）
+const articles = await getCollection('articles'); // 如果你还没建 articles collection，先用 videos 替代或新建
+
+// 获取博客 RSS 最新 3 篇（第二部分）
+let latestBlogPosts = [];
+try {
+  const rssResponse = await fetch('https://blog.axelx.cn/atom.xml');
+  const rssText = await rssResponse.text();
+  // 简单解析 RSS（实际生产建议用 xml2js 或类似，但这里用正则简化）
+  const items = rssText.match(/<item>[\s\S]*?<\/item>/g) || [];
+  latestBlogPosts = items.slice(0, 3).map(item => {
+    const titleMatch = item.match(/<title>(.*?)<\/title>/);
+    const linkMatch = item.match(/<link>(.*?)<\/link>/);
+    const pubDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
+    return {
+      title: titleMatch ? titleMatch[1] : '最新文章',
+      link: linkMatch ? linkMatch[1] : '#',
+      pubDate: pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('zh-CN') : '',
+    };
+  });
+} catch (e) {
+  console.error('RSS fetch failed', e);
+}
 ---
 
-<Layout
-  title="Starwind UI components demo"
-  description="A collection of accessible UI components built with Astro"
->
-<!-- 推荐视频 -->
-<h2 class="text-3xl font-bold mb-6">最新视频作品</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  {videos.map(video => (
-    <a href={`/videos/${video.id.replace('.md', '')}`} class="group">
-      <img src={video.data.cover} class="rounded-2xl w-full aspect-video object-cover transition-all group-hover:scale-105" />
-      <h3 class="mt-4 text-xl font-semibold">{video.data.title}</h3>
-    </a>
-  ))}
-</div>
-  <div class="container mx-auto px-4 pb-20">
-    <PopoverDemo />
-    <DropdownDemo />
-    <CardDemo />
-    <CollapsibleDemo />
-    <ThemeToggleDemo />
-    <BadgeDemo />
-    <ButtonDemo />
-    <ButtonGroupDemo />
-    <InputOtpDemo />
-    <InputGroupDemo />
-    <DialogDemo />
-    <ToastDemo />
-    <VideoDemo />
-    <SliderDemo />
-    <ImageDemo />
-    <AccordionDemo />
-    <SheetDemo />
-    <AspectRatioDemo />
-    <SpinnerDemo />
-    <SeparatorDemo />
-    <ItemDemo />
-    <CarouselDemos />
-    <CarouselPluginDemo />
-    <DropzoneDemo />
-    <ProgressDemo />
-    <SkeletonDemo />
-    <RadioGroupDemo />
-    <BreadcrumbDemo />
-    <AlertDialogDemo />
-    <TabsDemo />
-    <FormDemo />
-    <SelectDemo />
-    <NativeSelectDemo />
-    <PaginationDemo />
-    <SwitchDemo />
-    <ToggleDemo />
-    <AvatarDemo />
-    <CheckboxDemo />
-    <TooltipDemo />
-    <AlertDemo />
-    <TableDemo />
-    <KbdDemo />
-  </div>
+<Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
+  <main class="min-h-screen bg-black text-white">
+    <!-- 全宽 Banner / Hero Carousel -->
+    <div class="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black z-10"></div>
+      
+      <!-- 这里可以放多张 Banner 图片 + Carousel（Starwind 有 Carousel 组件） -->
+      <!-- 临时用单张大图，你可以后续换成 Carousel -->
+      <img 
+        src="https://cdn1.x-lab.top/axelblog/mayday5525hz_8.webp" 
+        class="absolute inset-0 w-full h-full object-cover" 
+        alt="AxelEwan Banner" 
+      />
+      
+      <div class="relative z-20 text-center px-6 max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
+          AxelEwan
+        </h1>
+        <p class="text-2xl md:text-3xl text-zinc-300 mb-10">
+          记录生活 · 分享故事
+        </p>
+        <a href="/videos" 
+           class="inline-block px-10 py-4 bg-white text-black font-medium rounded-full hover:bg-zinc-200 transition-all text-lg">
+          浏览全部作品
+        </a>
+      </div>
+    </div>
+
+    <!-- 推荐视频作品 -->
+    <div class="max-w-7xl mx-auto px-6 py-16">
+      <div class="flex items-end justify-between mb-10">
+        <h2 class="text-4xl font-bold tracking-tight">最新视频作品</h2>
+        <a href="/videos" class="text-zinc-400 hover:text-white flex items-center gap-2">
+          查看全部 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {recommendedVideos.length > 0 ? recommendedVideos.map((video) => (
+          <a href={`/videos/${video.id.replace('.md', '')}`} class="group">
+            <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-4 relative">
+              <img 
+                src={video.data.cover} 
+                class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" 
+                alt={video.data.title} 
+              />
+              <div class="absolute bottom-3 right-3 bg-black/70 px-2 py-0.5 text-xs rounded">
+                {video.data.category}
+              </div>
+            </div>
+            <h3 class="font-semibold text-lg line-clamp-2 group-hover:text-blue-400 transition-colors">
+              {video.data.title}
+            </h3>
+            <p class="text-sm text-zinc-400 mt-1">
+              {new Date(video.data.date).toLocaleDateString('zh-CN')} · by {video.data.author || 'AxelEwan'}
+            </p>
+          </a>
+        )) : (
+          <p class="text-zinc-400">暂无推荐视频</p>
+        )}
+      </div>
+    </div>
+
+    <!-- 最新动态 -->
+    <div class="max-w-7xl mx-auto px-6 py-16 border-t border-zinc-800">
+      <h2 class="text-4xl font-bold tracking-tight mb-10">最新动态</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- 第一部分：手动 MD 文章 -->
+        <div>
+          <h3 class="text-2xl font-semibold mb-6 text-zinc-300">精选文章</h3>
+          <div class="space-y-8">
+            {articles && articles.length > 0 ? articles.slice(0, 3).map((article) => (
+              <a href={`/articles/${article.id.replace('.md', '')}`} class="flex gap-6 group">
+                <img src={article.data.cover || '/placeholder.jpg'} class="w-40 h-24 object-cover rounded-xl" alt="" />
+                <div class="flex-1">
+                  <h4 class="font-medium group-hover:text-blue-400 transition-colors">{article.data.title}</h4>
+                  <p class="text-sm text-zinc-400 mt-2 line-clamp-2">{article.data.description}</p>
+                  <p class="text-xs text-zinc-500 mt-3">{new Date(article.data.date || article.data.pubDate).toLocaleDateString('zh-CN')}</p>
+                </div>
+              </a>
+            )) : <p class="text-zinc-400">暂无文章</p>}
+          </div>
+        </div>
+
+        <!-- 第二部分：博客 RSS 最新 3 篇 -->
+        <div>
+          <h3 class="text-2xl font-semibold mb-6 text-zinc-300">来自博客</h3>
+          <div class="space-y-8">
+            {latestBlogPosts.map((post) => (
+              <a href={post.link} target="_blank" class="block group">
+                <h4 class="font-medium group-hover:text-blue-400 transition-colors">{post.title}</h4>
+                <p class="text-xs text-zinc-500 mt-2">{post.pubDate}</p>
+              </a>
+            ))}
+            {latestBlogPosts.length === 0 && <p class="text-zinc-400">暂无最新博客</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商务联系 / Footer 简版 -->
+    <div class="max-w-7xl mx-auto px-6 py-20 border-t border-zinc-800 text-center">
+      <p class="text-zinc-400">商务合作 / 联系我</p>
+      <div class="mt-6 flex justify-center gap-8 text-sm">
+        <a href="mailto:your@email.com" class="hover:text-white">Email</a>
+        <a href="#" class="hover:text-white">微信</a>
+        <a href="#" class="hover:text-white">小红书</a>
+      </div>
+    </div>
+  </main>
 </Layout>
