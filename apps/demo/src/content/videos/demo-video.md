@@ -1,6 +1,6 @@
 ---
-title: "我的第一个自媒体视频演示"
-date: 2026-04-15T10:00:00Z
+title: "我的第一个自媒体视频演示TestVideo"
+date: 2026-03-27T23:40:00+08:00
 cover: "https://cdn1.x-lab.top/axelblog/mayday5525hz_8.webp"          # 先随便写，后面再换真实图片
 recommend: true
 category: "Vlog"
@@ -9,10 +9,10 @@ tags: ["生活", "旅行", "科技"]
 location: "上海"
 platforms:
   bilibili: "BV1n4QSBzEkA"
-  youtube: ""
+  youtube: "RhEd5MOqFho"
   local: ""                            # 留空就行
 rating: 9.8
-views: 12480
+views: 1248
 likes: 2341
 comments:
   - avatar: "https://i.pravatar.cc/48?u=1"
