@@ -1,7 +1,7 @@
 ---
 title: "1800元穷游三国｜当我一个人去了新加坡🇸🇬我改变了……"
 date: 2025-12-25T23:40:00+08:00
-cover: "https://i2.hdslb.com/bfs/archive/d15d4ed27ff058d18dd582e8084e409f7401fb97.jpg"
+cover: "https://cdn1.x-lab.top/SG%20TOUR%20EP1-cover.jpg"
 recommend: true
 category: "旅行"
 intro: "大学生靠自己看世界，第一站：新加坡🇸🇬 | 穷游三国DAY1
