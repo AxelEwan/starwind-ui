@@ -2,165 +2,146 @@
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 
+// 获取视频（推荐的优先显示）
 const allVideos = await getCollection('videos');
+const recommendedVideos = allVideos
+  .filter(v => v.data.recommend)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
-const recommendedVideos = allVideos.sort((a, b) => 
-  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-);
+// 获取手动写的文章（最新动态第一部分）
+const articles = await getCollection('articles'); // 如果你还没建 articles collection，先用 videos 替代或新建
 
-const banners = [
-  {
-    id: 1,
-    bgImage: 'https://cdn1.x-lab.top/axelblog/1721644153-gemtour9.webp',
-    title: 'AxelEwan 最新作品',
-    tag: 'NEW',
-    intro: '记录生活 · 分享故事',
-    videoSlug: 'demo-video',
-  },
-  {
-    id: 2,
-    bgImage: 'https://cdn1.x-lab.top/axelblog/1733584787-maydaysh5525.webp',
-    title: '新加坡独行旅行',
-    tag: '旅行',
-    intro: '一个人也能走得很远',
-    videoSlug: 'singapore-solo-travel',
-  },
-];
+// 获取博客 RSS 最新 3 篇（第二部分）
+let latestBlogPosts = [];
+try {
+  const rssResponse = await fetch('https://blog.axelx.cn/atom.xml');
+  const rssText = await rssResponse.text();
+  // 简单解析 RSS（实际生产建议用 xml2js 或类似，但这里用正则简化）
+  const items = rssText.match(/<item>[\s\S]*?<\/item>/g) || [];
+  latestBlogPosts = items.slice(0, 3).map(item => {
+    const titleMatch = item.match(/<title>(.*?)<\/title>/);
+    const linkMatch = item.match(/<link>(.*?)<\/link>/);
+    const pubDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
+    return {
+      title: titleMatch ? titleMatch[1] : '最新文章',
+      link: linkMatch ? linkMatch[1] : '#',
+      pubDate: pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('zh-CN') : '',
+    };
+  });
+} catch (e) {
+  console.error('RSS fetch failed', e);
+}
 ---
 
-<Layout title="一万AxelEwan" description="AxelEwan 的视频作品与最新动态">
+<Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
   <main class="min-h-screen bg-black text-white">
-    
-    <!-- 顶部轮播图 -->
-    <div id="hero-carousel" class="relative h-[85vh] min-h-[620px] overflow-hidden">
-      {banners.map((banner, index) => (
-        <div 
-          class={`absolute inset-0 transition-opacity duration-700 ${index === 0 ? 'opacity-100' : 'opacity-0'}`}
-          data-slide={index}
-        >
-          <img src={banner.bgImage} class="absolute inset-0 w-full h-full object-cover" alt={banner.title} />
-          
-          <div class="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-10"></div>
-          
-          <div class="absolute bottom-16 left-8 md:left-16 max-w-xl z-20">
-            <h1 class="text-5xl md:text-7xl font-black tracking-tighter drop-shadow-2xl">{banner.title}</h1>
-            
-            <div class="inline-block px-4 py-1 bg-white/20 backdrop-blur-md text-white text-sm font-medium rounded-full mb-4 mt-4">
-              {banner.tag}
-            </div>
-            
-            <p class="text-lg md:text-xl text-white/90 mb-8 max-w-md">{banner.intro}</p>
-            
-            <a href={`/videos/${banner.videoSlug}`} 
-               class="inline-flex items-center gap-3 bg-white text-black font-medium px-8 py-4 rounded-full hover:bg-white/90 transition-all text-lg">
-              <span class="text-2xl">▶</span>
-              立即观看
-            </a>
-          </div>
-        </div>
-      ))}
-
-      <!-- 进度条 -->
-      <div class="absolute bottom-8 left-8 right-8 h-1 bg-white/30 rounded-full overflow-hidden z-30">
-        <div id="progress-bar" class="h-full bg-white transition-all" style="width: 0%"></div>
+    <!-- 全宽 Banner / Hero Carousel -->
+    <div class="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black z-10"></div>
+      
+      <!-- 这里可以放多张 Banner 图片 + Carousel（Starwind 有 Carousel 组件） -->
+      <!-- 临时用单张大图，你可以后续换成 Carousel -->
+      <img 
+        src="/videos/cover1.jpg" 
+        class="absolute inset-0 w-full h-full object-cover" 
+        alt="AxelEwan Banner" 
+      />
+      
+      <div class="relative z-20 text-center px-6 max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
+          AxelEwan
+        </h1>
+        <p class="text-2xl md:text-3xl text-zinc-300 mb-10">
+          记录生活 · 分享故事
+        </p>
+        <a href="/videos" 
+           class="inline-block px-10 py-4 bg-white text-black font-medium rounded-full hover:bg-zinc-200 transition-all text-lg">
+          浏览全部作品
+        </a>
       </div>
-
-      <!-- 切换按钮 -->
-      <button id="prev-btn" class="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-40">‹</button>
-      <button id="next-btn" class="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-40">›</button>
     </div>
 
-    <!-- 最新视频作品 -->
+    <!-- 推荐视频作品 -->
     <div class="max-w-7xl mx-auto px-6 py-16">
       <div class="flex items-end justify-between mb-10">
         <h2 class="text-4xl font-bold tracking-tight">最新视频作品</h2>
-        <a href="/videos" class="text-zinc-400 hover:text-white flex items-center gap-2 text-lg">全部作品 →</a>
+        <a href="/videos" class="text-zinc-400 hover:text-white flex items-center gap-2">
+          查看全部 →
+        </a>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {recommendedVideos.map((video) => {
-          const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
-          const isNew = daysAgo <= 7;
-          const isHot = (video.data.views || 0) > 50000;
-
-          return (
-            <a href={`/videos/${video.id.replace('.md', '')}`} class="group relative" key={video.id}>
-              <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-3 relative">
-                <img 
-                  src={video.data.cover} 
-                  class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" 
-                  alt={video.data.title} 
-                />
-                {isNew && (
-                  <div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-0.5 rounded">最新发布</div>
-                )}
-                {isHot && !isNew && (
-                  <div class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-0.5 rounded">最热门</div>
-                )}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {recommendedVideos.length > 0 ? recommendedVideos.map((video) => (
+          <a href={`/videos/${video.id.replace('.md', '')}`} class="group">
+            <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-4 relative">
+              <img 
+                src={video.data.cover} 
+                class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" 
+                alt={video.data.title} 
+              />
+              <div class="absolute bottom-3 right-3 bg-black/70 px-2 py-0.5 text-xs rounded">
+                {video.data.category}
               </div>
-              <h3 class="font-semibold line-clamp-2 group-hover:text-blue-400">{video.data.title}</h3>
-              <p class="text-sm text-zinc-400 mt-1">
-                {new Date(video.data.date).toLocaleDateString('zh-CN')}
-              </p>
-            </a>
-          );
-        })}
+            </div>
+            <h3 class="font-semibold text-lg line-clamp-2 group-hover:text-blue-400 transition-colors">
+              {video.data.title}
+            </h3>
+            <p class="text-sm text-zinc-400 mt-1">
+              {new Date(video.data.date).toLocaleDateString('zh-CN')} · by {video.data.author || 'AxelEwan'}
+            </p>
+          </a>
+        )) : (
+          <p class="text-zinc-400">暂无推荐视频</p>
+        )}
       </div>
     </div>
 
     <!-- 最新动态 -->
     <div class="max-w-7xl mx-auto px-6 py-16 border-t border-zinc-800">
       <h2 class="text-4xl font-bold tracking-tight mb-10">最新动态</h2>
-      <p class="text-zinc-400">最新动态部分正在完善中...</p>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- 第一部分：手动 MD 文章 -->
+        <div>
+          <h3 class="text-2xl font-semibold mb-6 text-zinc-300">精选文章</h3>
+          <div class="space-y-8">
+            {articles && articles.length > 0 ? articles.slice(0, 3).map((article) => (
+              <a href={`/articles/${article.id.replace('.md', '')}`} class="flex gap-6 group">
+                <img src={article.data.cover || '/placeholder.jpg'} class="w-40 h-24 object-cover rounded-xl" alt="" />
+                <div class="flex-1">
+                  <h4 class="font-medium group-hover:text-blue-400 transition-colors">{article.data.title}</h4>
+                  <p class="text-sm text-zinc-400 mt-2 line-clamp-2">{article.data.description}</p>
+                  <p class="text-xs text-zinc-500 mt-3">{new Date(article.data.date || article.data.pubDate).toLocaleDateString('zh-CN')}</p>
+                </div>
+              </a>
+            )) : <p class="text-zinc-400">暂无文章</p>}
+          </div>
+        </div>
+
+        <!-- 第二部分：博客 RSS 最新 3 篇 -->
+        <div>
+          <h3 class="text-2xl font-semibold mb-6 text-zinc-300">来自博客</h3>
+          <div class="space-y-8">
+            {latestBlogPosts.map((post) => (
+              <a href={post.link} target="_blank" class="block group">
+                <h4 class="font-medium group-hover:text-blue-400 transition-colors">{post.title}</h4>
+                <p class="text-xs text-zinc-500 mt-2">{post.pubDate}</p>
+              </a>
+            ))}
+            {latestBlogPosts.length === 0 && <p class="text-zinc-400">暂无最新博客</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商务联系 / Footer 简版 -->
+    <div class="max-w-7xl mx-auto px-6 py-20 border-t border-zinc-800 text-center">
+      <p class="text-zinc-400">商务合作 / 联系我</p>
+      <div class="mt-6 flex justify-center gap-8 text-sm">
+        <a href="mailto:your@email.com" class="hover:text-white">Email</a>
+        <a href="#" class="hover:text-white">微信</a>
+        <a href="#" class="hover:text-white">小红书</a>
+      </div>
     </div>
   </main>
-
-  <!-- 轮播脚本 -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const slides = document.querySelectorAll('#hero-carousel > div[data-slide]');
-      const progressBar = document.getElementById('progress-bar');
-      if (slides.length === 0) return;
-
-      let current = 0;
-      const intervalTime = 6000;
-
-      const showSlide = (n) => {
-        slides.forEach((s, i) => {
-          s.style.opacity = i === n ? '1' : '0';
-        });
-      };
-
-      const resetProgress = () => {
-        progressBar.style.transition = 'none';
-        progressBar.style.width = '0%';
-        setTimeout(() => {
-          progressBar.style.transition = `width ${intervalTime}ms linear`;
-          progressBar.style.width = '100%';
-        }, 50);
-      };
-
-      const nextSlide = () => {
-        current = (current + 1) % slides.length;
-        showSlide(current);
-        resetProgress();
-      };
-
-      let autoTimer = setInterval(nextSlide, intervalTime);
-      resetProgress();
-
-      document.getElementById('next-btn')?.addEventListener('click', () => {
-        clearInterval(autoTimer);
-        nextSlide();
-        autoTimer = setInterval(nextSlide, intervalTime);
-      });
-
-      document.getElementById('prev-btn')?.addEventListener('click', () => {
-        clearInterval(autoTimer);
-        current = (current - 1 + slides.length) % slides.length;
-        showSlide(current);
-        autoTimer = setInterval(nextSlide, intervalTime);
-      });
-    });
-  </script>
 </Layout>
