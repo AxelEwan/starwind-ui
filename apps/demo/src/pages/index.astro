@@ -4,30 +4,38 @@ import Layout from '@/layouts/Layout.astro';
 
 const allVideos = await getCollection('videos');
 
+// 推荐视频（自动加入轮播 + 列表）
 const recommendedVideos = allVideos
-  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-  .map(video => {
-    const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
-    return {
-      ...video,
-      isNew: daysAgo <= 7,
-      isHot: (video.data.views || 0) > 50000,
-    };
-  });
+  .filter(v => v.data.recommend === true)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
-const banners = [
+// 手动轮播图（优先）
+const manualBanners = [
   {
     id: 1,
     bgImage: 'https://cdn1.x-lab.top/axelblog/1733584787-maydaysh5525.webp',
     title: 'AxelEwan',
     tag: '正在建设',
     intro: '记录生活 · 分享故事',
-    videoSlug: '/',
+    videoSlug: '',
   },
 ];
+
+// 合并成轮播图数据（手动优先 + 推荐视频）
+const banners = [
+  ...manualBanners,
+  ...recommendedVideos.map(v => ({
+    id: v.id,
+    bgImage: v.data.cover,
+    title: v.data.title,
+    tag: v.data.tags?.[0] || '推荐',
+    intro: v.data.intro || '最新力作',
+    videoSlug: v.id.replace('.md', ''),
+  }))
+].slice(0, 8);   // 最多显示 8 个
 ---
 
-<Layout title="AxelEwa一万" description="AxelEwan 的视频作品与最新动态">
+<Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
   <main class="min-h-screen bg-black text-white">
     
     <!-- 轮播图（取消箭头和进度条） -->
@@ -114,7 +122,7 @@ const banners = [
     </div>
   </main>
 
-  <!-- 轮播 + 悬停切换脚本 -->
+  <!-- 轮播悬停切换脚本 -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const slides = document.querySelectorAll('#hero-carousel > div[data-slide]');
@@ -127,12 +135,6 @@ const banners = [
         slides.forEach((s, i) => s.style.opacity = i === n ? '1' : '0');
       };
 
-      const nextSlide = () => {
-        current = (current + 1) % slides.length;
-        showSlide(current);
-      };
-
-      // 鼠标悬停缩略图切换
       thumbnails.forEach(thumb => {
         thumb.addEventListener('mouseenter', () => {
           const idx = parseInt(thumb.dataset.slideIndex);
