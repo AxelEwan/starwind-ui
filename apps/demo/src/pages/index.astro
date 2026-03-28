@@ -4,10 +4,20 @@ import Layout from '@/layouts/Layout.astro';
 
 const allVideos = await getCollection('videos');
 
+// 预计算推荐视频（带角标数据）
 const recommendedVideos = allVideos
-  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .map(video => {
+    const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
+    return {
+      ...video,
+      isNew: daysAgo <= 7,
+      isHot: (video.data.views || 0) > 50000,
+    };
+  });
 
-const banners = [
+// 轮播图（手动 + 推荐视频自动加入）
+const manualBanners = [
   {
     id: 1,
     bgImage: 'https://cdn1.x-lab.top/axelblog/1721644153-gemtour9.webp',
@@ -25,6 +35,18 @@ const banners = [
     videoSlug: 'singapore-solo-travel',
   },
 ];
+
+const banners = [
+  ...manualBanners,
+  ...recommendedVideos.map(v => ({
+    id: v.id,
+    bgImage: v.data.cover,
+    title: v.data.title,
+    tag: v.data.tags?.[0] || '推荐',
+    intro: v.data.intro || '',
+    videoSlug: v.id.replace('.md', ''),
+  }))
+].slice(0, 6);
 ---
 
 <Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
@@ -74,8 +96,6 @@ const banners = [
           <a href={`/videos/${banner.videoSlug}`} class="group flex-shrink-0 w-52 snap-center cursor-pointer" data-slide-index={index}>
             <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden relative shadow-2xl">
               <img src={banner.bgImage} class="w-full h-full object-cover transition-all duration-300 group-hover:scale-105" alt={banner.title} />
-              
-              <!-- 优酷同款蓝色渐变角标（从左上角渐变到中心透明） -->
               <div class="absolute top-3 left-3 w-12 h-12 bg-gradient-to-br from-blue-400 via-cyan-400 to-transparent opacity-90 rounded-xl flex items-center justify-center text-white text-[10px] font-bold shadow-inner">
                 {banner.tag}
               </div>
@@ -94,26 +114,25 @@ const banners = [
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {recommendedVideos.map((video) => {
-          const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
-          const isNew = daysAgo <= 7;
-          const isHot = (video.data.views || 0) > 50000;
-          return (
-            <a href={`/videos/${video.id.replace('.md', '')}`} class="group relative">
-              <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-3 relative">
-                <img src={video.data.cover} class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" alt={video.data.title} />
-                {isNew && <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 to-cyan-400 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最新发布</div>}
-                {isHot && !isNew && <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 to-cyan-400 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最热门</div>}
-              </div>
-              <h3 class="font-semibold line-clamp-2 group-hover:text-blue-400">{video.data.title}</h3>
-              <p class="text-sm text-zinc-400 mt-1">{new Date(video.data.date).toLocaleDateString('zh-CN')}</p>
-            </a>
-          );
-        })}
+        {recommendedVideos.map((item) => (
+          <a href={`/videos/${item.id.replace('.md', '')}`} class="group relative" key={item.id}>
+            <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-3 relative">
+              <img src={item.data.cover} class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" alt={item.data.title} />
+              {item.isNew && (
+                <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 via-cyan-400 to-transparent opacity-90 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最新发布</div>
+              )}
+              {item.isHot && !item.isNew && (
+                <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 via-cyan-400 to-transparent opacity-90 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最热门</div>
+              )}
+            </div>
+            <h3 class="font-semibold line-clamp-2 group-hover:text-blue-400">{item.data.title}</h3>
+            <p class="text-sm text-zinc-400 mt-1">{new Date(item.data.date).toLocaleDateString('zh-CN')}</p>
+          </a>
+        ))}
       </div>
     </div>
 
-    <!-- 联系方式模块 -->
+    <!-- 联系方式 -->
     <div class="max-w-7xl mx-auto px-6 py-20 border-t border-zinc-800 text-center">
       <div class="flex justify-center mb-6">
         <span class="text-3xl font-black tracking-[-2px] text-white/90">AxelEwan</span>
@@ -125,12 +144,14 @@ const banners = [
     </div>
   </main>
 
-  <!-- 轮播 + 悬停切换脚本 -->
+  <!-- 轮播脚本 -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const slides = document.querySelectorAll('#hero-carousel > div[data-slide]');
       const progressBar = document.getElementById('progress-bar');
       const thumbnails = document.querySelectorAll('.flex-shrink-0[data-slide-index]');
+      if (!slides.length) return;
+
       let current = 0;
       const intervalTime = 6000;
 
@@ -169,12 +190,13 @@ const banners = [
         });
       });
 
-      document.getElementById('next-btn').addEventListener('click', () => {
+      document.getElementById('next-btn')?.addEventListener('click', () => {
         clearInterval(autoTimer);
         nextSlide();
         autoTimer = setInterval(nextSlide, intervalTime);
       });
-      document.getElementById('prev-btn').addEventListener('click', () => {
+
+      document.getElementById('prev-btn')?.addEventListener('click', () => {
         clearInterval(autoTimer);
         current = (current - 1 + slides.length) % slides.length;
         showSlide(current);
