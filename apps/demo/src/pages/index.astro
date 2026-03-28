@@ -4,17 +4,13 @@ import Layout from '@/layouts/Layout.astro';
 
 const allVideos = await getCollection('videos');
 
-// 推荐视频（自动成为轮播候选）
 const recommendedVideos = allVideos
-  .filter(v => v.data.recommend)
   .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
-// 手动轮播图（优先级最高）
-const manualBanners = [
+const banners = [
   {
     id: 1,
     bgImage: 'https://cdn1.x-lab.top/axelblog/1721644153-gemtour9.webp',
-    logoImage: '',                    // 留空则显示文字标题
     title: 'AxelEwan 最新作品',
     tag: 'NEW',
     intro: '记录生活 · 分享故事',
@@ -23,27 +19,12 @@ const manualBanners = [
   {
     id: 2,
     bgImage: 'https://cdn1.x-lab.top/axelblog/1733584787-maydaysh5525.webp',
-    logoImage: '',
     title: '新加坡独行旅行',
     tag: '旅行',
     intro: '一个人也能走得很远',
-    videoSlug: '25tour-ep1',
+    videoSlug: 'singapore-solo-travel',
   },
 ];
-
-// 合并成统一轮播数据（手动优先 + 推荐视频）
-const banners = [
-  ...manualBanners,
-  ...recommendedVideos.map(v => ({
-    id: v.id,
-    bgImage: v.data.cover,
-    logoImage: '',                    // 推荐视频不显示 LOGO
-    title: v.data.title,
-    tag: '推荐',
-    intro: v.data.intro || '最新力作',
-    videoSlug: v.id.replace('.md', ''),
-  }))
-].slice(0, 6);   // 最多 6 个
 ---
 
 <Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
@@ -57,27 +38,20 @@ const banners = [
           data-slide={index}
         >
           <img src={banner.bgImage} class="absolute inset-0 w-full h-full object-cover" alt={banner.title} />
+          <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent z-10"></div>
           
-          <!-- 底部渐变过渡 -->
-          <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/70 to-transparent z-10"></div>
-          
-          <!-- 左侧内容（标题/LOGO + Tag + 简介 + 播放按钮） -->
           <div class="absolute bottom-20 left-8 md:left-16 max-w-2xl z-20">
-            {banner.logoImage ? (
-              <img src={banner.logoImage} class="h-16 md:h-24 mb-3 drop-shadow-2xl" alt="" />
-            ) : (
-              <h1 class="text-5xl md:text-6xl font-black tracking-[-2px] leading-none drop-shadow-2xl">{banner.title}</h1>
-            )}
+            <h1 class="text-4xl md:text-5xl font-black tracking-[-1px] leading-none drop-shadow-2xl">{banner.title}</h1>
             
-            <div class="inline-flex items-center gap-2 mt-4 mb-6">
-              <span class="px-4 py-1 bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-sm font-bold rounded-full shadow-inner">{banner.tag}</span>
+            <div class="inline-flex items-center gap-2 mt-5 mb-6">
+              <span class="px-4 py-1 text-white text-sm font-medium">{banner.tag}</span>
             </div>
             
-            <p class="text-lg md:text-xl text-white/90 max-w-md leading-tight mb-8">{banner.intro}</p>
+            <p class="text-base md:text-lg text-white/80 max-w-md leading-tight mb-8">{banner.intro}</p>
             
             <a href={`/videos/${banner.videoSlug}`} 
-               class="inline-flex items-center gap-3 bg-white hover:bg-white/90 text-black font-medium text-lg px-9 py-4 rounded-3xl transition-all">
-              <span class="text-3xl leading-none">▶</span>
+               class="inline-flex items-center gap-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-medium text-base px-7 py-3 rounded-3xl transition-all border border-white/30">
+              <span class="text-2xl">▶</span>
               立即观看
             </a>
           </div>
@@ -89,28 +63,20 @@ const banners = [
         <div id="progress-bar" class="h-full bg-white transition-all" style="width: 0%"></div>
       </div>
 
-      <!-- 左右按钮 -->
       <button id="prev-btn" class="absolute left-8 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-2xl text-3xl z-40">‹</button>
       <button id="next-btn" class="absolute right-8 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-2xl text-3xl z-40">›</button>
     </div>
 
-    <!-- 缩略图卡片列表（鼠标悬停切换轮播） -->
+    <!-- 缩略图卡片列表（鼠标悬停切换） -->
     <div class="max-w-7xl mx-auto px-6 -mt-12 relative z-30">
       <div class="flex gap-4 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
         {banners.map((banner, index) => (
-          <a 
-            href={`/videos/${banner.videoSlug}`}
-            class="group flex-shrink-0 w-52 snap-center cursor-pointer"
-            data-slide-index={index}
-          >
+          <a href={`/videos/${banner.videoSlug}`} class="group flex-shrink-0 w-52 snap-center cursor-pointer" data-slide-index={index}>
             <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden relative shadow-2xl">
-              <img 
-                src={banner.bgImage} 
-                class="w-full h-full object-cover transition-all duration-300 group-hover:scale-105" 
-                alt={banner.title} 
-              />
-              <!-- 优酷风格渐变蓝色角标 -->
-              <div class="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-[10px] font-bold px-3 py-px rounded shadow-inner">
+              <img src={banner.bgImage} class="w-full h-full object-cover transition-all duration-300 group-hover:scale-105" alt={banner.title} />
+              
+              <!-- 优酷同款蓝色渐变角标（从左上角渐变到中心透明） -->
+              <div class="absolute top-3 left-3 w-12 h-12 bg-gradient-to-br from-blue-400 via-cyan-400 to-transparent opacity-90 rounded-xl flex items-center justify-center text-white text-[10px] font-bold shadow-inner">
                 {banner.tag}
               </div>
             </div>
@@ -120,10 +86,42 @@ const banners = [
       </div>
     </div>
 
-    <!-- 最新动态（占位，可后续扩展） -->
-    <div class="max-w-7xl mx-auto px-6 py-16 border-t border-zinc-800">
-      <h2 class="text-4xl font-bold tracking-tight mb-10">最新动态</h2>
-      <p class="text-zinc-400">最新动态部分正在完善中...</p>
+    <!-- 最新视频作品列表 -->
+    <div class="max-w-7xl mx-auto px-6 py-16">
+      <div class="flex items-end justify-between mb-10">
+        <h2 class="text-4xl font-bold tracking-tight">最新视频作品</h2>
+        <a href="/videos" class="text-zinc-400 hover:text-white flex items-center gap-2 text-lg">全部作品 →</a>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {recommendedVideos.map((video) => {
+          const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
+          const isNew = daysAgo <= 7;
+          const isHot = (video.data.views || 0) > 50000;
+          return (
+            <a href={`/videos/${video.id.replace('.md', '')}`} class="group relative">
+              <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden mb-3 relative">
+                <img src={video.data.cover} class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" alt={video.data.title} />
+                {isNew && <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 to-cyan-400 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最新发布</div>}
+                {isHot && !isNew && <div class="absolute top-3 left-3 bg-gradient-to-br from-blue-400 to-cyan-400 text-white text-[10px] font-bold px-3 py-px rounded-xl shadow-inner">最热门</div>}
+              </div>
+              <h3 class="font-semibold line-clamp-2 group-hover:text-blue-400">{video.data.title}</h3>
+              <p class="text-sm text-zinc-400 mt-1">{new Date(video.data.date).toLocaleDateString('zh-CN')}</p>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+
+    <!-- 联系方式模块 -->
+    <div class="max-w-7xl mx-auto px-6 py-20 border-t border-zinc-800 text-center">
+      <div class="flex justify-center mb-6">
+        <span class="text-3xl font-black tracking-[-2px] text-white/90">AxelEwan</span>
+      </div>
+      <p class="text-zinc-400">商务合作 / 联系我</p>
+      <a href="mailto:hi@axelewan.com" class="mt-4 inline-flex items-center gap-2 text-white hover:text-blue-400 transition-colors">
+        ✉️ hi@axelewan.com
+      </a>
     </div>
   </main>
 
@@ -133,7 +131,6 @@ const banners = [
       const slides = document.querySelectorAll('#hero-carousel > div[data-slide]');
       const progressBar = document.getElementById('progress-bar');
       const thumbnails = document.querySelectorAll('.flex-shrink-0[data-slide-index]');
-      
       let current = 0;
       const intervalTime = 6000;
 
@@ -159,7 +156,6 @@ const banners = [
       let autoTimer = setInterval(nextSlide, intervalTime);
       resetProgress();
 
-      // 鼠标悬停缩略图切换主轮播
       thumbnails.forEach(thumb => {
         thumb.addEventListener('mouseenter', () => {
           clearInterval(autoTimer);
@@ -173,7 +169,6 @@ const banners = [
         });
       });
 
-      // 手动按钮
       document.getElementById('next-btn').addEventListener('click', () => {
         clearInterval(autoTimer);
         nextSlide();
