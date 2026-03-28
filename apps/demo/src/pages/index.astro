@@ -4,12 +4,24 @@ import Layout from '@/layouts/Layout.astro';
 
 const allVideos = await getCollection('videos');
 
-// 推荐视频（自动加入轮播 + 列表）
+// 1. 推荐视频（用于轮播图）
 const recommendedVideos = allVideos
   .filter(v => v.data.recommend === true)
   .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
-// 手动轮播图（优先）
+// 2. 全部视频（用于下方列表，按时间倒序）
+const allVideosSorted = allVideos
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .map(video => {
+    const daysAgo = Math.floor((Date.now() - new Date(video.data.date).getTime()) / 86400000);
+    return {
+      ...video,
+      isNew: daysAgo <= 7,
+      isHot: (video.data.views || 0) > 50000,
+    };
+  });
+
+// 手动轮播图
 const manualBanners = [
   {
     id: 1,
@@ -21,7 +33,7 @@ const manualBanners = [
   },
 ];
 
-// 合并成轮播图数据（手动优先 + 推荐视频）
+// 合并轮播图数据（手动优先 + 推荐视频）
 const banners = [
   ...manualBanners,
   ...recommendedVideos.map(v => ({
@@ -32,13 +44,13 @@ const banners = [
     intro: v.data.intro || '最新力作',
     videoSlug: v.id.replace('.md', ''),
   }))
-].slice(0, 8);   // 最多显示 8 个
+].slice(0, 8);
 ---
 
-<Layout title="AxelEwan | 个人作品官网" description="AxelEwan 的视频作品与最新动态">
+<Layout title="AxelEwan一万" description="AxelEwan 的视频作品与最新动态">
   <main class="min-h-screen bg-black text-white">
     
-    <!-- 轮播图（取消箭头和进度条） -->
+    <!-- 轮播图（无箭头、无进度条） -->
     <div id="hero-carousel" class="relative h-[70vh] md:h-[85vh] min-h-[500px] overflow-hidden">
       {banners.map((banner, index) => (
         <div 
@@ -67,7 +79,7 @@ const banners = [
       ))}
     </div>
 
-    <!-- 缩略图卡片列表（鼠标悬停切换） -->
+    <!-- 缩略图卡片列表（鼠标悬停切换轮播） -->
     <div class="max-w-7xl mx-auto px-6 -mt-8 md:-mt-12 relative z-30">
       <div class="flex gap-4 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
         {banners.map((banner, index) => (
@@ -84,7 +96,7 @@ const banners = [
       </div>
     </div>
 
-    <!-- 最新视频作品列表 -->
+    <!-- 最新视频作品列表（显示全部视频） -->
     <div class="max-w-7xl mx-auto px-6 py-16">
       <div class="flex items-end justify-between mb-10">
         <h2 class="text-4xl font-bold tracking-tight">最新视频作品</h2>
@@ -92,7 +104,7 @@ const banners = [
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {recommendedVideos.map((item) => (
+        {allVideosSorted.map((item) => (
           <a href={`/videos/${item.id.replace('.md', '')}`} class="group relative" key={item.id}>
             <div class="aspect-video bg-zinc-900 rounded-xl overflow-hidden mb-3 relative">
               <img src={item.data.cover} class="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105" alt={item.data.title} />
